@@ -8,7 +8,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L, { marker } from "leaflet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -18,26 +18,53 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png").default,
 });
 
+// const [addMarker, setAddMarker] = useState([]);
 function AddMarkerToClick() {
   const [markers, setMarkers] = useState([]);
-  const [addMarker, setAddMarker] = useState([]);
-  const map = useMapEvents({
-    click(e) {
-      const newMarker = e.latlng;
-      console.log("marker", newMarker, e);
-      setMarkers([...markers, newMarker]);
-    },
-  });
+  const [bName, setBName] = useState("");
+  let storeObj = {};
+  let newMarker = {};
   const addMarkerOnCLick = (e) => {
     e.PreventDefault();
-    setAddMarker([...addMarker], markers);
   };
-  const delMarker = (e) => {};
+  const map = useMapEvents({
+    click(e) {
+      newMarker = e.latlng;
+      console.log("marker", newMarker["lat"], e);
+      // window.localStorage.setItem("branchLoc", newMarker);
+      setMarkers([...markers, newMarker]);
+      storeObj[bName] = {
+        branch: bName,
+        lat: newMarker["lat"],
+        lng: newMarker["lng"],
+      };
+      window.localStorage.setItem("branchDetails", JSON.stringify(storeObj));
+
+      console.log("@@@", bName);
+      JSON.parse(window.localStorage.getItem("branchDetails"));
+      console.log("exp");
+    },
+  });
+  useEffect(() => {
+    console.log("marker***", markers);
+  }, [storeObj]);
+
+  const handleChange = (e) => {
+    setBName(e.target.value);
+  };
+
+  const delMarker = (e) => {
+    e.PreventDefault();
+    // addMarker.filter(() => {});
+  };
   const temp = markers.map((marker, index) => (
     <Marker position={marker} key={index}>
       <Popup>
-        Marker is at {marker.lat};
-        <button onClick={addMarkerOnCLick}>Add</button>
+        <form onSubmit={addMarkerOnCLick}>
+          Marker is at {marker.lat};
+          <input name="branchName" value={bName} onChange={handleChange} />
+          <button type="submit">Add</button>
+        </form>
         <button onClick={delMarker}>Del</button>
       </Popup>
     </Marker>
